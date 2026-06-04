@@ -1,1 +1,3 @@
-"WA_Fn-UseC_-Telco-Customer-Churn.csv" 
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
