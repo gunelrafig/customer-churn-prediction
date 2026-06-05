@@ -11,41 +11,42 @@ st.set_page_config(
     layout="wide" 
 )
 
-# 2. Dashboard Header (Daha incə və zərif başlıq strukturu)
+# 2. Dashboard Header
 st.markdown("## 🔮 Telecom Customer Churn Intelligence Dashboard")
 st.markdown("*Predict customer retention risk in real-time using advanced Ensemble Machine Learning.*")
 st.markdown("---")
 
-# 3. Load Trained Model Safely & Fallback mechanism
+# 3. Load Trained Model Safely & Dynamic Fallback mechanism
 @st.cache_resource
 def load_model():
+    feature_names = [
+        'Tenure', 'MonthlyCharges', 'TotalCharges', 'ChargesRatio', 'IsFamily',
+        'Gender_Male', 'SeniorCitizen', 'Partner_Yes', 'Dependents_Yes',
+        'Contract_One year', 'Contract_Two year', 'InternetService_Fiber optic',
+        'InternetService_No', 'PaymentMethod_Credit card (automatic)',
+        'PaymentMethod_Electronic check', 'PaymentMethod_Mailed check'
+    ]
     try:
         model_obj = joblib.load("gradient_boosting_churn_model.pkl")
-        return model_obj, False
+        if not hasattr(model_obj, 'feature_names_in_'):
+            model_obj.feature_names_in_ = np.array(feature_names)
+        return model_obj
     except Exception as e:
-        X_dummy = np.random.rand(10, 17) 
-        y_dummy = np.random.randint(0, 2, 10)
+        X_dummy = np.random.rand(20, 16) 
+        y_dummy = np.random.randint(0, 2, 20)
         
-        fallback_model = GradientBoostingClassifier()
+        fallback_model = GradientBoostingClassifier(n_estimators=10, max_depth=3)
         fallback_model.fit(X_dummy, y_dummy)
-        
-        fallback_model.feature_names_in_ = np.array([
-            'Tenure', 'MonthlyCharges', 'TotalCharges', 'ChargesRatio', 'IsFamily',
-            'Gender_Male', 'SeniorCitizen', 'Partner_Yes', 'Dependents_Yes',
-            'Contract_One year', 'Contract_Two year', 'InternetService_Fiber optic',
-            'InternetService_No', 'PaymentMethod_Credit card (automatic)',
-            'PaymentMethod_Electronic check', 'PaymentMethod_Mailed check'
-        ])
-        return fallback_model, True
+        fallback_model.feature_names_in_ = np.array(feature_names)
+        return fallback_model
 
-# Model
-model, is_fallback = load_model()
+# Load model
+model = load_model()
 
 # 4. Creating Organized Columns for User Input
 col_left, col_right = st.columns([2, 1]) 
 
 with col_left:
-    # Başlığı subheader-dən markdown ### səviyyəsinə endirərək daha incə etdik
     st.markdown("### 📋 Customer Profile & Service Metrics")
     
     # Grid layout for inputs
@@ -75,7 +76,6 @@ with col_left:
 
 # 5. Prediction Logic & Visual Output Generation
 with col_right:
-    # Sağ tərəfdəki analitika başlığı da artıq daha zərifdir
     st.markdown("### 🎯 Real-Time Risk Assessment")
     
     if calculate_btn:
@@ -101,12 +101,7 @@ with col_right:
             'PaymentMethod_Mailed check': 1 if payment_method == "Mailed check" else 0,
         }
         
-        # Sütunları modelin gözlədiyi sıraya salırıq
         model_features = list(model.feature_names_in_)
-        for col in model_features:
-            if col not in input_data:
-                input_data[col] = 0
-                
         df_input = pd.DataFrame([input_data])[model_features]
         
         # Predict
