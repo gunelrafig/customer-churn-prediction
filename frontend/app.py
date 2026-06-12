@@ -25,20 +25,23 @@ dependents = st.sidebar.selectbox("Has Dependents?", ["No", "Yes"])
 if st.sidebar.button("Run Risk Inference Pipeline"):
     # Schemas.py-dakı tam kiçik hərflərlə yazılmış struktura uyğun payload
     payload = {
-        "tenure": tenure,
-        "monthly_charges": monthly_charges,
-        "total_charges": total_charges,
-        "contract": contract,
-        "internet_service": internet_service,
-        "payment_method": payment_method,
-        "gender": gender,
-        "partner": partner,
-        "dependents": dependents
+        "Tenure": tenure,
+        "MonthlyCharges": monthly_charges,
+        "TotalCharges": total_charges,
+        "Contract": contract,
+        "PaymentMethod": payment_method,
+        "Gender": gender,
+        "Partner": partner,
+        "Dependents": dependents,
+        "InternetService": internet_service
     }
+
+
+    # Backend-in (FastAPI) gözlədiyi tam və dəqiq format:
     
     try:
         with st.spinner("Processing features and syncing with ML pipeline..."):
-            response = requests.post("http://127.0.0.1:8000/predict", json=payload)
+            response = requests.post("http://backend:8000/predict", json=payload)
             result = response.json()
         
         if response.status_code == 200:
